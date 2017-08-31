@@ -1,0 +1,24 @@
+{
+  "name": "phaser",
+  "version": "1.0.0",
+  "description": "messign with phaser io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dakine135/messingwithPhaserIO.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dakine135/messingwithPhaserIO/issues"
+  },
+  "homepage": "https://github.com/Dakine135/messingwithPhaserIO#readme",
+  "dependencies": {
+    "express": "^4.15.4",
+    "phaser-ce": "^2.8.5",
+    "socket.io": "^2.0.3"
+  }
+}
