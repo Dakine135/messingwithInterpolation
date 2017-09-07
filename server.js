@@ -1,13 +1,16 @@
 //NPM PACKAGES
 var express = require('express');
 var socket = require('socket.io');
+var matter = require('matter-js');
+var paper = require('paper-jsdom');
+var resurrect = require('resurrect-js');
 
 var app = express();
 var server = app.listen(3033);
 var io = socket(server);
 
-app.use(express.static('./phaser/examples'));
-console.log("Phaser node server running");
+app.use(express.static('./client'));
+console.log("Game node server running");
 
 io.sockets.on('connection', newConnection);
 
