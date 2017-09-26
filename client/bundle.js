@@ -2,27 +2,72 @@
 var matter = require('matter-js');
 window.paper = require('paper');
 var resurrect = require('resurrect-js');
+var EnergyNode = require('./shared/EnergyNode.js');
 
 // Only executed our code once the DOM is ready.
 window.onload = function() {
     // Get a reference to the canvas object
-    var canvas = document.getElementById('myCanvas');
     // Create an empty project and a view for the canvas:
+    var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
+
     // Create a Paper.js Path to draw a line into it:
-    var path = new paper.Path();
     // Give the stroke a color
-    path.strokeColor = 'black';
-    var start = new paper.Point(100, 100);
     // Move to start and draw a line from there
+    var path = new paper.Path();
+    path.strokeColor = 'white';
+    var start = new paper.Point(100, 100);
     path.moveTo(start);
-    // Note that the plus operator on Point objects does not work
-    // in JavaScript. Instead, we need to call the add() function:
-    path.lineTo(start.add([ 200, -50 ]));
+
+    //create EnergyNode at start
+    var energyNodeStart = EnergyNode(start, 20);
+
+    //create path and end circle
+    var end = start.add([ 200, -50 ]);
+    path.lineTo(end);
+    var energyNodeEnd = EnergyNode(end, 20);
+
+    console.log("Time: ", new Date());
+
     // Draw the view now:
     paper.view.draw();
+
+
+
+    // var myPath;
+    //
+    // function onMouseDown(event) {
+    // 	myPath = new Path();
+    // 	myPath.strokeColor = 'black';
+    // }
+    //
+    // function onMouseDrag(event) {
+    // 	myPath.add(event.point);
+    // }
+    //
+    // function onMouseUp(event) {
+    // 	var myCircle = new Path.Circle({
+    // 		center: event.point,
+    // 		radius: 10
+    // 	});
+    // 	myCircle.strokeColor = 'black';
+    // 	myCircle.fillColor = 'white';
+    // }
+
+
 }
-},{"matter-js":4,"paper":5,"resurrect-js":6}],2:[function(require,module,exports){
+
+},{"./shared/EnergyNode.js":2,"matter-js":5,"paper":6,"resurrect-js":7}],2:[function(require,module,exports){
+module.exports = function (point, size) {
+    this.circle = new paper.Shape.Circle(point, size);
+    this.circle.strokeColor = 'blue';
+}
+
+// EnergyNode.prototype = {
+//
+// };
+
+},{}],3:[function(require,module,exports){
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -3456,9 +3501,9 @@ exports.lineBreakG = lineBreakG;
 Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-},{}],3:[function(require,module,exports){
-
 },{}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
 (function (global){
 /**
 * matter-js 0.13.0 by @liabru 2017-07-06
@@ -13738,7 +13783,7 @@ var Vector = _dereq_('../geometry/Vector');
 },{"../body/Composite":2,"../core/Common":14,"../core/Events":16,"../geometry/Bounds":26,"../geometry/Vector":28}]},{},[30])(30)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*!
  * Paper.js v0.11.4 - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
@@ -30226,7 +30271,7 @@ if (typeof define === 'function' && define.amd) {
 return paper;
 }.call(this, typeof self === 'object' ? self : null);
 
-},{"./node/extend.js":3,"./node/self.js":3,"acorn":2}],6:[function(require,module,exports){
+},{"./node/extend.js":4,"./node/self.js":4,"acorn":3}],7:[function(require,module,exports){
 /**
  * # ResurrectJS
  * @version 1.0.3
