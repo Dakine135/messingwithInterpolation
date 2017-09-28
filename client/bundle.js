@@ -3,64 +3,86 @@ var matter = require('matter-js');
 window.paper = require('paper');
 var resurrect = require('resurrect-js');
 var EnergyNode = require('./shared/EnergyNode.js');
+var Graph = require('./shared/Graph.js');
 
+paper.install(window);
 // Only executed our code once the DOM is ready.
 window.onload = function() {
     // Get a reference to the canvas object
     // Create an empty project and a view for the canvas:
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
+    view.viewSize = new Size(1200, 900);
+    //console.log(view.viewSize);
+    //(new Size(1200, 900));
 
-    // Create a Paper.js Path to draw a line into it:
-    // Give the stroke a color
-    // Move to start and draw a line from there
-    var path = new paper.Path();
-    path.strokeColor = 'white';
-    var start = new paper.Point(100, 100);
-    path.moveTo(start);
 
-    //create EnergyNode at start
-    var energyNodeStart = EnergyNode(start, 20);
+    // var start = new paper.Point(100, 100);
+    // var energyNodeStart = new EnergyNode(start, 20);
+    //
+    // var end = start.add([ 200, -50 ]);
+    // var energyNodeEnd = new EnergyNode(end, 20);
+    // energyNodeStart.addLink(energyNodeEnd);
 
-    //create path and end circle
-    var end = start.add([ 200, -50 ]);
-    path.lineTo(end);
-    var energyNodeEnd = EnergyNode(end, 20);
+    var graph = new Graph();
 
-    console.log("Time: ", new Date());
+    var lastNodeId = null;
+
+    view.onMouseDown = function(event) {
+        var x = Math.round(event.point.x);
+        var y = Math.round(event.point.y);
+        var pointClicked = new Point(x, y);
+        console.log("click down @ ", pointClicked);
+    	var newNodeId = graph.addEnergyNode(pointClicked);
+        if(lastNodeId == null){
+            lastNodeId = newNodeId;
+        } else {
+            graph.addLink(lastNodeId, newNodeId);
+            lastNodeId = newNodeId;
+        }
+    }
+
+    view.onFrame = function(event){
+        //console.log(event);
+    }
+
+    view.onResize = function(event){
+
+    }
 
     // Draw the view now:
-    paper.view.draw();
+    // paper.view.draw();
+
+    function onMouseDrag(event) {
+        console.log("Mouse Drag: ", event);
+    	//myPath.add(event.point);
+    }
+
+    function onMouseUp(event) {
+        console.log("mouse up: ", event);
+    	// var myCircle = new Path.Circle({
+    	// 	center: event.point,
+    	// 	radius: 10
+    	// });
+    	// myCircle.strokeColor = 'black';
+    	// myCircle.fillColor = 'white';
+    }
 
 
+}//end onload
 
-    // var myPath;
-    //
-    // function onMouseDown(event) {
-    // 	myPath = new Path();
-    // 	myPath.strokeColor = 'black';
-    // }
-    //
-    // function onMouseDrag(event) {
-    // 	myPath.add(event.point);
-    // }
-    //
-    // function onMouseUp(event) {
-    // 	var myCircle = new Path.Circle({
-    // 		center: event.point,
-    // 		radius: 10
-    // 	});
-    // 	myCircle.strokeColor = 'black';
-    // 	myCircle.fillColor = 'white';
-    // }
-
-
-}
-
-},{"./shared/EnergyNode.js":2,"matter-js":5,"paper":6,"resurrect-js":7}],2:[function(require,module,exports){
-module.exports = function (point, size) {
+},{"./shared/EnergyNode.js":2,"./shared/Graph.js":3,"matter-js":6,"paper":7,"resurrect-js":8}],2:[function(require,module,exports){
+module.exports = function (ID, point, size) {
+    this.id = ID;
+    this.point = point;
     this.circle = new paper.Shape.Circle(point, size);
     this.circle.strokeColor = 'blue';
+    this.linkedNodes = [];
+
+    this.addLink = function(node){
+        console.log("link: ", this.id, " to ", node.id);
+        this.linkedNodes.push(node);
+    }
 }
 
 // EnergyNode.prototype = {
@@ -68,6 +90,40 @@ module.exports = function (point, size) {
 // };
 
 },{}],3:[function(require,module,exports){
+var EnergyNode = require('./EnergyNode.js');
+module.exports = function () {
+    this.currentIdNum = 0;
+    this.energyNodes = {};
+    this.path = new paper.Path();
+    this.path.strokeColor = 'white';
+
+    this.addEnergyNode = function(point){
+        var size = 20;
+        var newNode = new EnergyNode(this.currentIdNum, point, size);
+        this.energyNodes[this.currentIdNum] = newNode;
+        var returnId = this.currentIdNum;
+        this.currentIdNum++;
+
+        //console.log(Object.keys(this.energyNodes));
+        if(Object.keys(this.energyNodes).length == 1){
+            console.log("first Node");
+            //this.path = new paper.Path();
+            this.path.moveTo(point);
+        }
+
+        return returnId;
+    }
+
+    this.addLink = function(fromNodeId, toNodeId){
+        var fromNode = this.energyNodes[fromNodeId];
+        var toNode = this.energyNodes[toNodeId];
+        fromNode.addLink(toNode);
+        this.path.lineTo(toNode.point);
+        this.path.smooth();
+    }
+}
+
+},{"./EnergyNode.js":2}],4:[function(require,module,exports){
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -3501,9 +3557,9 @@ exports.lineBreakG = lineBreakG;
 Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-},{}],4:[function(require,module,exports){
-
 },{}],5:[function(require,module,exports){
+
+},{}],6:[function(require,module,exports){
 (function (global){
 /**
 * matter-js 0.13.0 by @liabru 2017-07-06
@@ -13783,7 +13839,7 @@ var Vector = _dereq_('../geometry/Vector');
 },{"../body/Composite":2,"../core/Common":14,"../core/Events":16,"../geometry/Bounds":26,"../geometry/Vector":28}]},{},[30])(30)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /*!
  * Paper.js v0.11.4 - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
@@ -30271,7 +30327,7 @@ if (typeof define === 'function' && define.amd) {
 return paper;
 }.call(this, typeof self === 'object' ? self : null);
 
-},{"./node/extend.js":4,"./node/self.js":4,"acorn":3}],7:[function(require,module,exports){
+},{"./node/extend.js":5,"./node/self.js":5,"acorn":4}],8:[function(require,module,exports){
 /**
  * # ResurrectJS
  * @version 1.0.3
