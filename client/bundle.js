@@ -1,9 +1,9 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var matter = require('matter-js');
-window.paper = require('paper');
+var paper = require('paper');
 var resurrect = require('resurrect-js');
-var EnergyNode = require('./shared/EnergyNode.js');
 var Graph = require('./shared/Graph.js');
+var Gui = require('./shared/Gui.js');
 
 paper.install(window);
 // Only executed our code once the DOM is ready.
@@ -25,25 +25,19 @@ window.onload = function() {
     // energyNodeStart.addLink(energyNodeEnd);
 
     var graph = new Graph();
-
-    var lastNodeId = null;
+    var gui = new Gui(graph);
 
     view.onMouseDown = function(event) {
         var x = Math.round(event.point.x);
         var y = Math.round(event.point.y);
         var pointClicked = new Point(x, y);
-        console.log("click down @ ", pointClicked);
-    	var newNodeId = graph.addEnergyNode(pointClicked);
-        if(lastNodeId == null){
-            lastNodeId = newNodeId;
-        } else {
-            graph.addLink(lastNodeId, newNodeId);
-            lastNodeId = newNodeId;
-        }
+        //console.log("click down @ ", pointClicked);
+        gui.mouseDown(pointClicked);
+
     }
 
     view.onFrame = function(event){
-        //console.log(event);
+        graph.update(event.delta);
     }
 
     view.onResize = function(event){
@@ -53,35 +47,102 @@ window.onload = function() {
     // Draw the view now:
     // paper.view.draw();
 
-    function onMouseDrag(event) {
-        console.log("Mouse Drag: ", event);
-    	//myPath.add(event.point);
+    view.onMouseDrag = function(event) {
+        var x = Math.round(event.point.x);
+        var y = Math.round(event.point.y);
+        var pointDragged = new Point(x, y);
+        //console.log("Mouse Drag: ", pointDragged);
+        gui.mouseDrag(pointDragged);
     }
 
-    function onMouseUp(event) {
-        console.log("mouse up: ", event);
-    	// var myCircle = new Path.Circle({
-    	// 	center: event.point,
-    	// 	radius: 10
-    	// });
-    	// myCircle.strokeColor = 'black';
-    	// myCircle.fillColor = 'white';
+    view.onMouseUp = function(event) {
+        var x = Math.round(event.point.x);
+        var y = Math.round(event.point.y);
+        var pointRealeased = new Point(x, y);
+        //console.log("mouse released");
+        gui.mouseUp(pointRealeased);
     }
 
 
 }//end onload
 
-},{"./shared/EnergyNode.js":2,"./shared/Graph.js":3,"matter-js":6,"paper":7,"resurrect-js":8}],2:[function(require,module,exports){
+},{"./shared/Graph.js":4,"./shared/Gui.js":5,"matter-js":9,"paper":10,"resurrect-js":11}],2:[function(require,module,exports){
+module.exports = function (text, x, y, callBack) {
+    var viewWidth = view.viewSize._width;
+    var viewHeight = view.viewSize._height;
+    this.width = 100;
+    this.height = 50;
+    this.x = x;
+    this.y = y;
+    this.rectangle = new paper.Shape.Rectangle(this.x, this.y, this.width, this.height);
+    this.rectangle.style = {
+        fillColor: 'brown',
+        strokeColor: 'yellow',
+        strokeWidth: 2
+    }
+
+    this.text = new PointText(new Point(
+        (this.x + (this.width/2)),
+        (this.y + (this.height/2))
+    ));
+    this.text.justification = 'center';
+    this.text.fillColor = 'white';
+    this.text.content = text;
+    this.rectangle.addChild(this.text);
+
+    this.callBack = callBack;
+
+    this.clicked = function(pointClicked){
+        if(this.rectangle.contains(pointClicked)){
+            this.callBack();
+            return true;
+        }
+        return false;
+    }
+}//end Button Class
+
+},{}],3:[function(require,module,exports){
 module.exports = function (ID, point, size) {
     this.id = ID;
-    this.point = point;
     this.circle = new paper.Shape.Circle(point, size);
-    this.circle.strokeColor = 'blue';
+    this.circle.style = {
+        fillColor: 'blue',
+        strokeColor: 'green',
+        strokeWidth: 3
+    }
+    //this.circle.fillColor.hue = 20;
+    this.currentPath = -1;
     this.linkedNodes = [];
 
     this.addLink = function(node){
-        console.log("link: ", this.id, " to ", node.id);
-        this.linkedNodes.push(node);
+        //console.log("link: ", this.id, " to ", node.id);
+        var newLinkPath = new paper.Path(this.circle.position, node.circle.position);
+        newLinkPath.style = {
+            strokeColor: 'green',
+            strokeWidth: 3
+        }
+        var link = {
+            path: newLinkPath,
+            node: node
+        }
+        this.linkedNodes.push(link);
+        this.currentPath = this.linkedNodes.length - 1;
+    }
+
+    this.nextLink = function(){
+        if(this.currentPath == -1) return null;
+        var link = this.linkedNodes[this.currentPath];
+        this.currentPath++;
+        if(this.currentPath >= this.linkedNodes.length) this.currentPath = 0;
+        return link;
+    }
+
+    this.toggleSelected = function(){
+        this.circle.selected = !this.circle.selected;
+    }
+
+    this.update = function(delta){
+
     }
 }
 
@@ -89,13 +150,23 @@ module.exports = function (ID, point, size) {
 //
 // };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var EnergyNode = require('./EnergyNode.js');
+var Packet = require('./Packet.js');
 module.exports = function () {
     this.currentIdNum = 0;
     this.energyNodes = {};
-    this.path = new paper.Path();
-    this.path.strokeColor = 'white';
+    //this.path = new paper.Path();
+    // this.path.style = {
+    //     strokeColor: 'green',
+    //     strokeWidth: 3
+    // }
+    //this.path.fullySelected = true;
+    //this.path.closed = true;
+
+    this.packets = [];
+
+    var that = this;
 
     this.addEnergyNode = function(point){
         var size = 20;
@@ -105,12 +176,11 @@ module.exports = function () {
         this.currentIdNum++;
 
         //console.log(Object.keys(this.energyNodes));
-        if(Object.keys(this.energyNodes).length == 1){
-            console.log("first Node");
-            //this.path = new paper.Path();
-            this.path.moveTo(point);
-        }
-
+        // if(Object.keys(this.energyNodes).length == 1){
+        //     //console.log("first Node");
+        //     //this.path = new paper.Path();
+        //     this.path.moveTo(point);
+        // }
         return returnId;
     }
 
@@ -118,12 +188,214 @@ module.exports = function () {
         var fromNode = this.energyNodes[fromNodeId];
         var toNode = this.energyNodes[toNodeId];
         fromNode.addLink(toNode);
-        this.path.lineTo(toNode.point);
-        this.path.smooth();
+        //this.path.lineTo(toNode.circle.position);
+        //this.path.smooth();
+    }
+
+    this.addPacket = function(nodeId){
+        var nodeStart = this.energyNodes[nodeId];
+        var link = nodeStart.nextLink();
+        if(link != null){
+            this.packets.push( new Packet(nodeStart, link));
+        }
+    }
+
+    this.moveEnergyNode = function(nodeId, point){
+        var previousPoint = this.energyNodes[nodeId].circle.position;
+        this.energyNodes[nodeId].circle.position = point;
+        // this.path.segments.forEach( function(segment){
+        //     if(segment.point.equals(previousPoint)){
+        //         segment.point = point;
+        //     }
+        // });
+        //this.path.smooth();
+    }
+
+    this.checkIfNodeAtPoint = function(point){
+        var nodeClickedId = -1; //no node clicked
+        Object.keys(this.energyNodes).forEach( function(nodeId){
+            if(that.energyNodes[nodeId].circle.contains(point)){
+                nodeClickedId = nodeId;
+                return;
+            }
+        });
+        return nodeClickedId;
+    }
+
+    this.toggleSelectedNode = function(nodeId){
+        this.energyNodes[nodeId].toggleSelected();
+    }
+
+    this.update = function(delta){
+        this.packets.forEach( function(packet){
+            packet.update(delta);
+        });
+        // Object.keys(this.energyNodes).forEach( function(nodeId){
+        //     that.energyNodes[nodeId].update(delta);
+        // });
     }
 }
 
-},{"./EnergyNode.js":2}],4:[function(require,module,exports){
+},{"./EnergyNode.js":3,"./Packet.js":6}],5:[function(require,module,exports){
+var Graph = require('./Graph.js');
+var Button = require('./Button.js');
+module.exports = function (graph) {
+
+    //main graph reference
+    this.graph = graph;
+
+    //variables
+    this.nodeBeingMoved = -1;
+    this.addLinkStartNode = -1;
+    this.activeTool = "None";
+    this.buttonClicked = false;
+
+    var that = this;
+
+    //buttons
+    this.buttons = [];
+    var xPos = 760;
+    this.buttons.push(
+        new Button("Add Node", xPos, 10, function(pointClicked){
+            that.activeTool = "addNode";
+            console.log("Add Node Tool Selected");
+    }));
+    xPos += 110;
+    this.buttons.push(
+        new Button("Move Node", xPos, 10, function(pointClicked){
+            that.activeTool = "moveNode";
+            console.log("Move Node Tool Selected");
+    }));
+    xPos += 110;
+    this.buttons.push(
+        new Button("Add Link", xPos, 10, function(pointClicked){
+            that.activeTool = "addLink";
+            console.log("Add Link Tool Selected");
+    }));
+    xPos += 110;
+    this.buttons.push(
+        new Button("Add Packet", xPos, 10, function(pointClicked){
+            that.activeTool = "addPacket";
+            console.log("Add Packet Tool Selected");
+    }));
+
+    this.mouseDown = function(pointClicked){
+        //check if gui button clicked
+        this.buttonClicked = false;
+        this.buttons.forEach( function(button){
+            var tempClickedBool = button.clicked(pointClicked);
+            if(tempClickedBool) that.buttonClicked = true;
+        });
+
+        if(!this.buttonClicked){
+            if(this.activeTool == "moveNode"){
+                //check if clicked on node
+                var nodeClickedId = this.graph.checkIfNodeAtPoint(pointClicked);
+                if(nodeClickedId != -1){
+                    //console.log("Node Clicked: ", nodeClickedId);
+                    this.nodeBeingMoved = nodeClickedId;
+                    this.graph.toggleSelectedNode(nodeClickedId);
+                }
+            }//end moveNodeTool
+            else if(this.activeTool == "addNode"){
+                //create new node
+                var newNodeId = this.graph.addEnergyNode(pointClicked);
+            }//end addNodeTool
+            else if(this.activeTool == "addLink"){
+                //add Link
+                var nodeClickedId = this.graph.checkIfNodeAtPoint(pointClicked);
+                if(nodeClickedId != -1){
+                    console.log("Node Clicked: ", nodeClickedId);
+                    this.addLinkStartNode = nodeClickedId;
+                }
+            }//end addNodeTool
+            else if(this.activeTool == "addPacket"){
+                var nodeClickedId = this.graph.checkIfNodeAtPoint(pointClicked);
+                if(nodeClickedId != -1){
+                    this.graph.addPacket(nodeClickedId);
+                }
+            }//end addPacketTool
+
+
+        }//end no buttonClicked
+    }//end mouseDown
+
+    this.mouseDrag = function(pointDragged){
+        if(this.activeTool == "addLink"){
+
+        }
+        else if(this.activeTool == "moveNode" && this.nodeBeingMoved != -1){
+            this.graph.moveEnergyNode(this.nodeBeingMoved, pointDragged);
+        }
+    }//end mouseDrag
+
+    this.mouseUp = function(pointRealeased){
+        if(this.activeTool == "addLink" && this.addLinkStartNode != -1){
+            var nodeClickedId = this.graph.checkIfNodeAtPoint(pointRealeased);
+            if(nodeClickedId != -1 && nodeClickedId != this.addLinkStartNode){
+                console.log("addLink: ", this.addLinkStartNode, nodeClickedId);
+                this.graph.addLink(this.addLinkStartNode, nodeClickedId);
+            }
+            this.addLinkStartNode = -1;
+        }
+        else if(this.activeTool == "moveNode" && this.nodeBeingMoved != -1){
+            this.graph.toggleSelectedNode(this.nodeBeingMoved);
+            this.nodeBeingMoved = -1;
+        }
+    }//end mouseUp
+
+}//end Gui Class
+
+},{"./Button.js":2,"./Graph.js":4}],6:[function(require,module,exports){
+var EnergyNode = require('./EnergyNode.js');
+module.exports = function (nodeStart, link) {
+    console.log("NodeStart: ", nodeStart.id);
+    this.nodeStart = nodeStart;
+    this.nodeEnd = link.node;
+    this.size = 6;
+    this.speed = 300; //  pixels/second
+    this.dir = 1;
+    this.path = link.path;
+    this.offset = 0;
+    this.circle = new paper.Shape.Circle(nodeStart.circle.position, this.size);
+    this.circle.style = {
+        fillColor: 'yellow',
+        strokeColor: 'white',
+        strokeWidth: 2
+    }
+
+    this.update = function (delta, path) {
+          this.offset += this.dir * delta * this.speed; // speed - 150px/second
+          if(this.offset > this.path.length){
+              var nextLink = this.nodeEnd.nextLink();
+              if(nextLink != null){
+                  this.nodeStart = this.nodeEnd;
+                  this.nodeEnd = nextLink.node;
+                  this.path = nextLink.path;
+                  this.offset = 0;
+              } else {
+                  this.offset = this.path.length;
+                  this.dir = -1;
+              }
+          } else if (this.offset < 0){
+              //came back to start Node
+              var nextLink = this.nodeStart.nextLink();
+              if(nextLink != null){
+                  this.nodeEnd = nextLink.node;
+                  this.path = nextLink.path;
+                  this.offset = 0;
+                  this.dir = 1;
+              } else {
+                  this.offset = 0;
+                  this.dir = 1;
+              }
+          }
+          this.circle.position = this.path.getPointAt(this.offset);
+    }//end update function
+
+} //end Packet class
+
+},{"./EnergyNode.js":3}],7:[function(require,module,exports){
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -3557,9 +3829,9 @@ exports.lineBreakG = lineBreakG;
 Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (global){
 /**
 * matter-js 0.13.0 by @liabru 2017-07-06
@@ -13839,7 +14111,7 @@ var Vector = _dereq_('../geometry/Vector');
 },{"../body/Composite":2,"../core/Common":14,"../core/Events":16,"../geometry/Bounds":26,"../geometry/Vector":28}]},{},[30])(30)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /*!
  * Paper.js v0.11.4 - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
@@ -30327,7 +30599,7 @@ if (typeof define === 'function' && define.amd) {
 return paper;
 }.call(this, typeof self === 'object' ? self : null);
 
-},{"./node/extend.js":5,"./node/self.js":5,"acorn":4}],8:[function(require,module,exports){
+},{"./node/extend.js":8,"./node/self.js":8,"acorn":7}],11:[function(require,module,exports){
 /**
  * # ResurrectJS
  * @version 1.0.3

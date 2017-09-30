@@ -1,8 +1,8 @@
 var matter = require('matter-js');
-window.paper = require('paper');
+var paper = require('paper');
 var resurrect = require('resurrect-js');
-var EnergyNode = require('./shared/EnergyNode.js');
 var Graph = require('./shared/Graph.js');
+var Gui = require('./shared/Gui.js');
 
 paper.install(window);
 // Only executed our code once the DOM is ready.
@@ -24,25 +24,19 @@ window.onload = function() {
     // energyNodeStart.addLink(energyNodeEnd);
 
     var graph = new Graph();
-
-    var lastNodeId = null;
+    var gui = new Gui(graph);
 
     view.onMouseDown = function(event) {
         var x = Math.round(event.point.x);
         var y = Math.round(event.point.y);
         var pointClicked = new Point(x, y);
-        console.log("click down @ ", pointClicked);
-    	var newNodeId = graph.addEnergyNode(pointClicked);
-        if(lastNodeId == null){
-            lastNodeId = newNodeId;
-        } else {
-            graph.addLink(lastNodeId, newNodeId);
-            lastNodeId = newNodeId;
-        }
+        //console.log("click down @ ", pointClicked);
+        gui.mouseDown(pointClicked);
+
     }
 
     view.onFrame = function(event){
-        //console.log(event);
+        graph.update(event.delta);
     }
 
     view.onResize = function(event){
@@ -52,19 +46,20 @@ window.onload = function() {
     // Draw the view now:
     // paper.view.draw();
 
-    function onMouseDrag(event) {
-        console.log("Mouse Drag: ", event);
-    	//myPath.add(event.point);
+    view.onMouseDrag = function(event) {
+        var x = Math.round(event.point.x);
+        var y = Math.round(event.point.y);
+        var pointDragged = new Point(x, y);
+        //console.log("Mouse Drag: ", pointDragged);
+        gui.mouseDrag(pointDragged);
     }
 
-    function onMouseUp(event) {
-        console.log("mouse up: ", event);
-    	// var myCircle = new Path.Circle({
-    	// 	center: event.point,
-    	// 	radius: 10
-    	// });
-    	// myCircle.strokeColor = 'black';
-    	// myCircle.fillColor = 'white';
+    view.onMouseUp = function(event) {
+        var x = Math.round(event.point.x);
+        var y = Math.round(event.point.y);
+        var pointRealeased = new Point(x, y);
+        //console.log("mouse released");
+        gui.mouseUp(pointRealeased);
     }
 
 
