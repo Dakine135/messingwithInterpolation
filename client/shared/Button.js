@@ -9,7 +9,7 @@ module.exports = function (text, x, y, callBack) {
     this.rectangle.style = {
         fillColor: 'brown',
         strokeColor: 'yellow',
-        strokeWidth: 2
+        strokeWidth: 0
     }
 
     this.text = new PointText(new Point(
@@ -25,7 +25,7 @@ module.exports = function (text, x, y, callBack) {
 
     this.clicked = function(pointClicked){
         if(this.rectangle.contains(pointClicked)){
-            this.callBack();
+            this.callBack(this, pointClicked);
             return true;
         }
         return false;

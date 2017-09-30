@@ -1,6 +1,6 @@
 var EnergyNode = require('./EnergyNode.js');
 module.exports = function (nodeStart, link) {
-    console.log("NodeStart: ", nodeStart.id);
+    //console.log("NodeStart: ", nodeStart.id);
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
     this.size = 6;

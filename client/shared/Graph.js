@@ -48,14 +48,8 @@ module.exports = function () {
     }
 
     this.moveEnergyNode = function(nodeId, point){
-        var previousPoint = this.energyNodes[nodeId].circle.position;
-        this.energyNodes[nodeId].circle.position = point;
-        // this.path.segments.forEach( function(segment){
-        //     if(segment.point.equals(previousPoint)){
-        //         segment.point = point;
-        //     }
-        // });
-        //this.path.smooth();
+        var node = this.energyNodes[nodeId];
+        node.moveTo(point);
     }
 
     this.checkIfNodeAtPoint = function(point){
@@ -77,8 +71,8 @@ module.exports = function () {
         this.packets.forEach( function(packet){
             packet.update(delta);
         });
-        // Object.keys(this.energyNodes).forEach( function(nodeId){
-        //     that.energyNodes[nodeId].update(delta);
-        // });
+        Object.keys(this.energyNodes).forEach( function(nodeId){
+            that.energyNodes[nodeId].update(delta);
+        });
     }
 }

@@ -16,13 +16,9 @@ window.onload = function() {
     //console.log(view.viewSize);
     //(new Size(1200, 900));
 
+    // var path = new Path(500, 500, 500, 700);
+    // path.fillColor = "blue";
 
-    // var start = new paper.Point(100, 100);
-    // var energyNodeStart = new EnergyNode(start, 20);
-    //
-    // var end = start.add([ 200, -50 ]);
-    // var energyNodeEnd = new EnergyNode(end, 20);
-    // energyNodeStart.addLink(energyNodeEnd);
 
     var graph = new Graph();
     var gui = new Gui(graph);
@@ -78,7 +74,7 @@ module.exports = function (text, x, y, callBack) {
     this.rectangle.style = {
         fillColor: 'brown',
         strokeColor: 'yellow',
-        strokeWidth: 2
+        strokeWidth: 0
     }
 
     this.text = new PointText(new Point(
@@ -94,7 +90,7 @@ module.exports = function (text, x, y, callBack) {
 
     this.clicked = function(pointClicked){
         if(this.rectangle.contains(pointClicked)){
-            this.callBack();
+            this.callBack(this, pointClicked);
             return true;
         }
         return false;
@@ -104,15 +100,25 @@ module.exports = function (text, x, y, callBack) {
 },{}],3:[function(require,module,exports){
 module.exports = function (ID, point, size) {
     this.id = ID;
+    this.temp = 0;
+    var maxTemp = 1000;
     this.circle = new paper.Shape.Circle(point, size);
     this.circle.style = {
         fillColor: 'blue',
         strokeColor: 'green',
         strokeWidth: 3
     }
-    //this.circle.fillColor.hue = 20;
+    this.circle.fillColor.blue = 1;
+    this.circle.fillColor.red = 0;
     this.currentPath = -1;
     this.linkedNodes = [];
+    this.linkedFromNodes = [];
+
+    this.debugText = new PointText(point.x + 10, point.y - 10);
+    this.debugText.fillColor = "white";
+    this.debugText.content = this.temp;
+
+    var that = this;
 
     this.addLink = function(node){
         //console.log("link: ", this.id, " to ", node.id);
@@ -126,10 +132,25 @@ module.exports = function (ID, point, size) {
             node: node
         }
         this.linkedNodes.push(link);
+        node.linkedFromNodes.push(this);
         this.currentPath = this.linkedNodes.length - 1;
     }
 
+    this.moveTo = function(point){
+      this.circle.position = point;
+      this.debugText.position = new Point(point.x + 10, point.y - 10);
+      this.linkedNodes.forEach( function(link){
+        link.path.segments[link.path.firstSegment.index].point = point;
+      });
+      this.linkedFromNodes.forEach( function(fromNode){
+        fromNode.linkedNodes.forEach( function(link){
+           link.path.segments[link.path.lastSegment.index].point = point;
+        });
+      });
+    }
+
     this.nextLink = function(){
+        this.temp += 5;
         if(this.currentPath == -1) return null;
         var link = this.linkedNodes[this.currentPath];
         this.currentPath++;
@@ -142,8 +163,20 @@ module.exports = function (ID, point, size) {
     }
 
     this.update = function(delta){
-
-    }
+      //console.log(this.temp);
+      if(this.temp > 0) this.temp--;
+      if(this.temp > maxTemp) this.temp = maxTemp;
+      var tempScale = this.temp / maxTemp;
+      this.circle.fillColor = {
+        gradient: {
+          stops: [['red', tempScale], ['blue', 1]],
+          radial: true
+        },
+        origin: this.circle.position,
+        destination: this.circle.bounds.rightCenter
+      };
+      this.debugText.content = this.temp;
+    }//end update
 }
 
 // EnergyNode.prototype = {
@@ -201,14 +234,8 @@ module.exports = function () {
     }
 
     this.moveEnergyNode = function(nodeId, point){
-        var previousPoint = this.energyNodes[nodeId].circle.position;
-        this.energyNodes[nodeId].circle.position = point;
-        // this.path.segments.forEach( function(segment){
-        //     if(segment.point.equals(previousPoint)){
-        //         segment.point = point;
-        //     }
-        // });
-        //this.path.smooth();
+        var node = this.energyNodes[nodeId];
+        node.moveTo(point);
     }
 
     this.checkIfNodeAtPoint = function(point){
@@ -230,9 +257,9 @@ module.exports = function () {
         this.packets.forEach( function(packet){
             packet.update(delta);
         });
-        // Object.keys(this.energyNodes).forEach( function(nodeId){
-        //     that.energyNodes[nodeId].update(delta);
-        // });
+        Object.keys(this.energyNodes).forEach( function(nodeId){
+            that.energyNodes[nodeId].update(delta);
+        });
     }
 }
 
@@ -256,28 +283,39 @@ module.exports = function (graph) {
     this.buttons = [];
     var xPos = 760;
     this.buttons.push(
-        new Button("Add Node", xPos, 10, function(pointClicked){
+        new Button("Add Node", xPos, 10, function(self, pointClicked){
             that.activeTool = "addNode";
-            console.log("Add Node Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
+
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Move Node", xPos, 10, function(pointClicked){
+        new Button("Move Node", xPos, 10, function(self, pointClicked){
             that.activeTool = "moveNode";
-            console.log("Move Node Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Add Link", xPos, 10, function(pointClicked){
+        new Button("Add Link", xPos, 10, function(self, pointClicked){
             that.activeTool = "addLink";
-            console.log("Add Link Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Add Packet", xPos, 10, function(pointClicked){
+        new Button("Add Packet", xPos, 10, function(self, pointClicked){
             that.activeTool = "addPacket";
-            console.log("Add Packet Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
+
+    this.removeStrokeFromAllButtons = function(){
+      this.buttons.forEach( function(button){
+          button.rectangle.strokeWidth = 0;
+      });
+    }
 
     this.mouseDown = function(pointClicked){
         //check if gui button clicked
@@ -305,7 +343,7 @@ module.exports = function (graph) {
                 //add Link
                 var nodeClickedId = this.graph.checkIfNodeAtPoint(pointClicked);
                 if(nodeClickedId != -1){
-                    console.log("Node Clicked: ", nodeClickedId);
+                    //console.log("Node Clicked: ", nodeClickedId);
                     this.addLinkStartNode = nodeClickedId;
                 }
             }//end addNodeTool
@@ -349,7 +387,7 @@ module.exports = function (graph) {
 },{"./Button.js":2,"./Graph.js":4}],6:[function(require,module,exports){
 var EnergyNode = require('./EnergyNode.js');
 module.exports = function (nodeStart, link) {
-    console.log("NodeStart: ", nodeStart.id);
+    //console.log("NodeStart: ", nodeStart.id);
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
     this.size = 6;

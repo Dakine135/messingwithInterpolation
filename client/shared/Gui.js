@@ -17,28 +17,39 @@ module.exports = function (graph) {
     this.buttons = [];
     var xPos = 760;
     this.buttons.push(
-        new Button("Add Node", xPos, 10, function(pointClicked){
+        new Button("Add Node", xPos, 10, function(self, pointClicked){
             that.activeTool = "addNode";
-            console.log("Add Node Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
+
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Move Node", xPos, 10, function(pointClicked){
+        new Button("Move Node", xPos, 10, function(self, pointClicked){
             that.activeTool = "moveNode";
-            console.log("Move Node Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Add Link", xPos, 10, function(pointClicked){
+        new Button("Add Link", xPos, 10, function(self, pointClicked){
             that.activeTool = "addLink";
-            console.log("Add Link Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
     xPos += 110;
     this.buttons.push(
-        new Button("Add Packet", xPos, 10, function(pointClicked){
+        new Button("Add Packet", xPos, 10, function(self, pointClicked){
             that.activeTool = "addPacket";
-            console.log("Add Packet Tool Selected");
+            that.removeStrokeFromAllButtons();
+            self.rectangle.strokeWidth = 4;
     }));
+
+    this.removeStrokeFromAllButtons = function(){
+      this.buttons.forEach( function(button){
+          button.rectangle.strokeWidth = 0;
+      });
+    }
 
     this.mouseDown = function(pointClicked){
         //check if gui button clicked
@@ -66,7 +77,7 @@ module.exports = function (graph) {
                 //add Link
                 var nodeClickedId = this.graph.checkIfNodeAtPoint(pointClicked);
                 if(nodeClickedId != -1){
-                    console.log("Node Clicked: ", nodeClickedId);
+                    //console.log("Node Clicked: ", nodeClickedId);
                     this.addLinkStartNode = nodeClickedId;
                 }
             }//end addNodeTool

@@ -15,13 +15,9 @@ window.onload = function() {
     //console.log(view.viewSize);
     //(new Size(1200, 900));
 
+    // var path = new Path(500, 500, 500, 700);
+    // path.fillColor = "blue";
 
-    // var start = new paper.Point(100, 100);
-    // var energyNodeStart = new EnergyNode(start, 20);
-    //
-    // var end = start.add([ 200, -50 ]);
-    // var energyNodeEnd = new EnergyNode(end, 20);
-    // energyNodeStart.addLink(energyNodeEnd);
 
     var graph = new Graph();
     var gui = new Gui(graph);
