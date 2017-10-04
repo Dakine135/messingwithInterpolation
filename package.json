@@ -21,11 +21,13 @@
   "homepage": "https://github.com/Dakine135/messingwithPhaserIO#readme",
   "dependencies": {
     "browserify": "^14.4.0",
+    "cookies-js": "^1.2.3",
     "express": "^4.15.4",
     "matter-js": "^0.13.0",
     "nodemon": "^1.12.0",
     "paper": "^0.11.4",
     "paper-jsdom": "^0.11.4",
+    "popups": "^1.1.3",
     "resurrect-js": "^1.0.1",
     "socket.io": "^2.0.3",
     "watchify": "^3.9.0"

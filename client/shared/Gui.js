@@ -1,5 +1,6 @@
 var Graph = require('./Graph.js');
 var Button = require('./Button.js');
+var Cookies = require('cookies-js');
 module.exports = function (graph) {
 
     //main graph reference
@@ -12,6 +13,11 @@ module.exports = function (graph) {
     this.buttonClicked = false;
 
     var that = this;
+
+    //text
+    this.nameText = new PointText(new Point(10, 20));
+    this.nameText.justification = 'left';
+    this.nameText.fillColor = 'white';
 
     //buttons
     this.buttons = [];

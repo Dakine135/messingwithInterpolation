@@ -18,10 +18,10 @@ function newConnection(socket){
   //Client first connects, create Client object and snake
   console.log("a user connected: ", socket.id);
 
-    // socket.on('guiState', updateGuiState);
-    // function updateGuiState(guiState){
-    //     GLOBALS.CURRENTGAMESTATE.updateGuiState(guiState);
-    // }
+    socket.on('clientData', clientJoin);
+    function clientJoin(clientData){
+        console.log("Client Data: ", clientData);
+    }
 
     socket.on('disconnecting', clientDisconnected);
     function clientDisconnected(){

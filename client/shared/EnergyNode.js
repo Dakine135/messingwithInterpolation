@@ -39,12 +39,16 @@ module.exports = function (ID, point, size) {
     this.moveTo = function(point){
       this.circle.position = point;
       this.debugText.position = new Point(point.x + 10, point.y - 10);
+      //move begining of all paths going out
       this.linkedNodes.forEach( function(link){
         link.path.segments[link.path.firstSegment.index].point = point;
       });
+      //move end of all paths linking in
       this.linkedFromNodes.forEach( function(fromNode){
         fromNode.linkedNodes.forEach( function(link){
-           link.path.segments[link.path.lastSegment.index].point = point;
+            if(link.node.id == that.id){
+                link.path.segments[link.path.lastSegment.index].point = point;
+            }
         });
       });
     }
