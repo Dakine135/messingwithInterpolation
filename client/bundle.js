@@ -35,23 +35,73 @@ module.exports = function () {
     this.updateClientData = function(){
         this.socket.emit('clientData',this.client);
     }
-}
+
+    this.pingServer = function(){
+        return new Promise(function(resolve){
+            that.socket.emit('sendPing');
+            that.socket.on('pong', function(serverTimeStamp){
+                //console.log("serverTimeStamp: ", serverTimeStamp);
+                resolve(serverTimeStamp);
+            });
+        });
+    }//end ping server
+
+}// end socket class
 
 },{"cookies-js":11}],2:[function(require,module,exports){
 var Graph = require('./shared/Graph.js');
 var Gui = require('./shared/Gui.js');
 module.exports = function () {
-    this.time = 0;
+    this.timeDiffernce = null;
     this.serverTick = 0;
 
-    this.getServerTime = function(){
-        var timeSent = new date().getTime();
+    var that = this
+
+    this.timeDiffernceArray = [];
+    this.updateServerTimeDiffernce = function(){
+        if(this.timeDiffernceArray.length < 5){
+            this.getServerTimeDiffernce().then((timeDiffernce) => {
+                if(that.timeDiffernce == null){
+                    that.timeDiffernce = timeDiffernce;
+                }
+                that.timeDiffernceArray.push(timeDiffernce);
+                console.log(timeDiffernce);
+                setTimeout(function(){
+                    that.updateServerTimeDiffernce();
+                }, 3000);
+            });
+
+        } else {
+            //calculate standard deviation and mean, then set timeDiffernce 
+        }
+    } //end updateServerTimeDiffernce
+
+    this.getServerTimeDiffernce = function(){
+        var timeSent = new Date().getTime();
         //ping server and recieve server timestamp (time received from server's prespective)
-        //take time when recieved on client, this is the round-trip time
-        //half this for the one-way time
-        //subtract travel time from servers timestamp
-        //now you can calculate differnce in server and client time
-    }
+        var serverTimePromise = SOCKET.pingServer();
+        return serverTimePromise.then((serverTime) => {
+            //take time when recieved on client, this is the round-trip time
+            var timeRecieved = new Date().getTime();
+            var roundTripTime = timeRecieved - timeSent;
+            //half this for the one-way time delay
+            var delay = roundTripTime / 2;
+            //subtract travel time from servers timestamp
+            var adjustedServerTime = serverTime - delay;
+            //now you can calculate differnce in server and client time
+            var timeDiffernce = adjustedServerTime - timeSent;
+            // console.log("Time Sent:          ", timeSent);
+            // console.log("Time Recieved:      ", timeRecieved);
+            // console.log("serverTime:         ", serverTime);
+            // console.log("roundTripTime:      ", roundTripTime);
+            // console.log("Delay:              ", delay);
+            // console.log("adjustedServerTime: ", adjustedServerTime);
+            console.log("timeDiffernce:      ", timeDiffernce);
+            return new Promise(function(resolve){
+                resolve(timeDiffernce);
+            });
+        });
+    }//end getServerTimeDiffernce
 }
 
 },{"./shared/Graph.js":6,"./shared/Gui.js":7}],3:[function(require,module,exports){
@@ -75,6 +125,9 @@ global.GRAPH = new Graph();
 global.GUI = new Gui(GRAPH);
 global.SOCKET = new Socket();
 SOCKET.getName();
+
+global.GAMESTATE = new GameState();
+GAMESTATE.updateServerTimeDiffernce();
 
 view.onMouseDown = function(event) {
     var x = Math.round(event.point.x);

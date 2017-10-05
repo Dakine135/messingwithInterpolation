@@ -23,6 +23,13 @@ function newConnection(socket){
         console.log("Client Data: ", clientData);
     }
 
+    socket.on('sendPing', ping);
+    function ping(){
+        var serverTime = new Date().getTime();
+        console.log("Server Time: ", serverTime);
+        socket.emit('pong', serverTime);
+    }
+
     socket.on('disconnecting', clientDisconnected);
     function clientDisconnected(){
         console.log("client disconnected: ", socket.id);

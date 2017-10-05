@@ -18,6 +18,9 @@ global.GUI = new Gui(GRAPH);
 global.SOCKET = new Socket();
 SOCKET.getName();
 
+global.GAMESTATE = new GameState();
+GAMESTATE.updateServerTimeDiffernce();
+
 view.onMouseDown = function(event) {
     var x = Math.round(event.point.x);
     var y = Math.round(event.point.y);

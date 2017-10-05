@@ -34,4 +34,15 @@ module.exports = function () {
     this.updateClientData = function(){
         this.socket.emit('clientData',this.client);
     }
-}
+
+    this.pingServer = function(){
+        return new Promise(function(resolve){
+            that.socket.emit('sendPing');
+            that.socket.on('pong', function(serverTimeStamp){
+                //console.log("serverTimeStamp: ", serverTimeStamp);
+                resolve(serverTimeStamp);
+            });
+        });
+    }//end ping server
+
+}// end socket class
