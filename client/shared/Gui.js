@@ -16,8 +16,13 @@ module.exports = function (graph) {
 
     //text
     this.nameText = new PointText(new Point(10, 20));
-    this.nameText.justification = 'left';
-    this.nameText.fillColor = 'white';
+    this.pingText = new PointText(new Point(10, 40));
+    this.timeDiffernceText = new PointText(new Point(10, 60));
+    this.textGroup = new Group(this.nameText, this.timeDiffernceText);
+    this.textGroup.style = {
+        justification: 'left',
+        fillColor: 'white'
+    };
 
     //buttons
     this.buttons = [];

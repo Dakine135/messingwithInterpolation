@@ -3,6 +3,9 @@ var Cookies = require('cookies-js');
 module.exports = function () {
     this.socket = io();
     this.client = {};
+    this.timeDiffernce = null;
+    this.serverTick = 0;
+    this.ping = 100;
 
     var that = this;
 
@@ -18,7 +21,7 @@ module.exports = function () {
                         that.client.name = val;
                         Cookies.set('name', val, { expires: Infinity });
                         console.log("Name: ", that.client.name);
-                        GUI.nameText.content = that.client.name;
+                        GUI.nameText.content = "Name: " + that.client.name;
                         that.updateClientData();
                     } else {
                         console.log("no val");
@@ -27,7 +30,7 @@ module.exports = function () {
             });
         } else {
             console.log("Name: ", this.client.name);
-            GUI.nameText.content = this.client.name;
+            GUI.nameText.content = "Name: " + that.client.name;
             this.updateClientData();
         }
     }
@@ -46,17 +49,6 @@ module.exports = function () {
         });
     }//end ping server
 
-}// end socket class
-
-},{"cookies-js":11}],2:[function(require,module,exports){
-var Graph = require('./shared/Graph.js');
-var Gui = require('./shared/Gui.js');
-module.exports = function () {
-    this.timeDiffernce = null;
-    this.serverTick = 0;
-
-    var that = this
-
     this.timeDiffernceArray = [];
     this.updateServerTimeDiffernce = function(){
         if(this.timeDiffernceArray.length < 5){
@@ -65,14 +57,39 @@ module.exports = function () {
                     that.timeDiffernce = timeDiffernce;
                 }
                 that.timeDiffernceArray.push(timeDiffernce);
-                console.log(timeDiffernce);
+                //console.log(timeDiffernce);
                 setTimeout(function(){
                     that.updateServerTimeDiffernce();
                 }, 3000);
             });
 
         } else {
-            //calculate standard deviation and mean, then set timeDiffernce 
+            //calculate standard deviation and mean, then set timeDiffernce
+            this.timeDiffernceArray.sort();
+            console.log(this.timeDiffernceArray);
+            var midIndex = Math.floor(this.timeDiffernceArray.length / 2);
+            var mean = this.timeDiffernceArray[midIndex];
+            //console.log("Mean: ", mean);
+            var squareSum = 0;
+            for(var i=0; i<this.timeDiffernceArray.length; i++){
+              var diff = mean - this.timeDiffernceArray[i];
+              var square = Math.pow(diff, 2);
+              squareSum += square;
+            }
+            var avgSquaredDistance = squareSum / this.timeDiffernceArray.length;
+            var standardDeviation = Math.pow(avgSquaredDistance, 0.5);
+            //console.log("standardDeviation: ", standardDeviation);
+            var sumOfCluster = 0;
+            totalCount = 0;
+            this.timeDiffernceArray.forEach((time) => {
+              if(time < standardDeviation){
+                sumOfCluster += time;
+                totalCount++;
+              }
+            });
+            this.timeDiffernce = sumOfCluster / totalCount;
+            GUI.timeDiffernceText.content = "Time Differnce: " + this.timeDiffernce;
+            //console.log("this.timeDiffernce: ",this.timeDiffernce);
         }
     } //end updateServerTimeDiffernce
 
@@ -84,6 +101,7 @@ module.exports = function () {
             //take time when recieved on client, this is the round-trip time
             var timeRecieved = new Date().getTime();
             var roundTripTime = timeRecieved - timeSent;
+            //this.ping = 0.25 * roundTripTime + (0.75) * this.ping;
             //half this for the one-way time delay
             var delay = roundTripTime / 2;
             //subtract travel time from servers timestamp
@@ -96,12 +114,22 @@ module.exports = function () {
             // console.log("roundTripTime:      ", roundTripTime);
             // console.log("Delay:              ", delay);
             // console.log("adjustedServerTime: ", adjustedServerTime);
-            console.log("timeDiffernce:      ", timeDiffernce);
+            //console.log("timeDiffernce:      ", timeDiffernce);
             return new Promise(function(resolve){
                 resolve(timeDiffernce);
             });
         });
     }//end getServerTimeDiffernce
+
+}// end socket class
+
+},{"cookies-js":11}],2:[function(require,module,exports){
+var Graph = require('./shared/Graph.js');
+var Gui = require('./shared/Gui.js');
+module.exports = function () {
+    
+    var that = this
+
 }
 
 },{"./shared/Graph.js":6,"./shared/Gui.js":7}],3:[function(require,module,exports){
@@ -125,9 +153,9 @@ global.GRAPH = new Graph();
 global.GUI = new Gui(GRAPH);
 global.SOCKET = new Socket();
 SOCKET.getName();
+SOCKET.updateServerTimeDiffernce();
 
 global.GAMESTATE = new GameState();
-GAMESTATE.updateServerTimeDiffernce();
 
 view.onMouseDown = function(event) {
     var x = Math.round(event.point.x);
@@ -390,8 +418,13 @@ module.exports = function (graph) {
 
     //text
     this.nameText = new PointText(new Point(10, 20));
-    this.nameText.justification = 'left';
-    this.nameText.fillColor = 'white';
+    this.pingText = new PointText(new Point(10, 40));
+    this.timeDiffernceText = new PointText(new Point(10, 60));
+    this.textGroup = new Group(this.nameText, this.timeDiffernceText);
+    this.textGroup.style = {
+        justification: 'left',
+        fillColor: 'white'
+    };
 
     //buttons
     this.buttons = [];
