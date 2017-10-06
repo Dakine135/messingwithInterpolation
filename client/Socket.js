@@ -1,7 +1,9 @@
 var Cookies = require('cookies-js');
 module.exports = function () {
     this.socket = io();
-    this.client = {};
+    this.client = {
+        name: ""
+    };
     this.timeDiffernce = null;
     this.serverTick = 0;
     this.ping = 100;
@@ -20,16 +22,17 @@ module.exports = function () {
                         that.client.name = val;
                         Cookies.set('name', val, { expires: Infinity });
                         console.log("Name: ", that.client.name);
-                        GUI.nameText.content = "Name: " + that.client.name;
+                        GAMESTATE.GUI.nameText.content = "Name: " + that.client.name;
                         that.updateClientData();
                     } else {
                         console.log("no val");
+                        that.getName();
                     }
                 }
             });
         } else {
             console.log("Name: ", this.client.name);
-            GUI.nameText.content = "Name: " + that.client.name;
+            GAMESTATE.GUI.nameText.content = "Name: " + that.client.name;
             this.updateClientData();
         }
     }
@@ -87,7 +90,7 @@ module.exports = function () {
               }
             });
             this.timeDiffernce = sumOfCluster / totalCount;
-            GUI.timeDiffernceText.content = "Time Differnce: " + this.timeDiffernce;
+            GAMESTATE.GUI.timeDiffernceText.content = "Time Differnce: " + this.timeDiffernce;
             //console.log("this.timeDiffernce: ",this.timeDiffernce);
         }
     } //end updateServerTimeDiffernce
@@ -95,7 +98,7 @@ module.exports = function () {
     this.getServerTimeDiffernce = function(){
         var timeSent = new Date().getTime();
         //ping server and recieve server timestamp (time received from server's prespective)
-        var serverTimePromise = SOCKET.pingServer();
+        var serverTimePromise = this.pingServer();
         return serverTimePromise.then((serverTime) => {
             //take time when recieved on client, this is the round-trip time
             var timeRecieved = new Date().getTime();

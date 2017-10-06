@@ -2,7 +2,9 @@
 var Cookies = require('cookies-js');
 module.exports = function () {
     this.socket = io();
-    this.client = {};
+    this.client = {
+        name: ""
+    };
     this.timeDiffernce = null;
     this.serverTick = 0;
     this.ping = 100;
@@ -21,16 +23,17 @@ module.exports = function () {
                         that.client.name = val;
                         Cookies.set('name', val, { expires: Infinity });
                         console.log("Name: ", that.client.name);
-                        GUI.nameText.content = "Name: " + that.client.name;
+                        GAMESTATE.GUI.nameText.content = "Name: " + that.client.name;
                         that.updateClientData();
                     } else {
                         console.log("no val");
+                        that.getName();
                     }
                 }
             });
         } else {
             console.log("Name: ", this.client.name);
-            GUI.nameText.content = "Name: " + that.client.name;
+            GAMESTATE.GUI.nameText.content = "Name: " + that.client.name;
             this.updateClientData();
         }
     }
@@ -88,7 +91,7 @@ module.exports = function () {
               }
             });
             this.timeDiffernce = sumOfCluster / totalCount;
-            GUI.timeDiffernceText.content = "Time Differnce: " + this.timeDiffernce;
+            GAMESTATE.GUI.timeDiffernceText.content = "Time Differnce: " + this.timeDiffernce;
             //console.log("this.timeDiffernce: ",this.timeDiffernce);
         }
     } //end updateServerTimeDiffernce
@@ -96,7 +99,7 @@ module.exports = function () {
     this.getServerTimeDiffernce = function(){
         var timeSent = new Date().getTime();
         //ping server and recieve server timestamp (time received from server's prespective)
-        var serverTimePromise = SOCKET.pingServer();
+        var serverTimePromise = this.pingServer();
         return serverTimePromise.then((serverTime) => {
             //take time when recieved on client, this is the round-trip time
             var timeRecieved = new Date().getTime();
@@ -126,22 +129,37 @@ module.exports = function () {
 },{"cookies-js":11}],2:[function(require,module,exports){
 var Graph = require('./shared/Graph.js');
 var Gui = require('./shared/Gui.js');
+var Socket = require('./Socket.js');
 module.exports = function () {
-    
-    var that = this
+    this.GRAPH;
+    this.GUI;
+    this.SOCKET;
+
+    var that = this;
+
+    this.setup = function(){
+        this.GRAPH = new Graph();
+        this.GUI = new Gui(this.GRAPH);
+        this.SOCKET = new Socket();
+        this.SOCKET.getName();
+        this.SOCKET.updateServerTimeDiffernce();
+    }
+
+    this.update = function(delta){
+        this.GRAPH.update(delta);
+    }
+
+
 
 }
 
-},{"./shared/Graph.js":6,"./shared/Gui.js":7}],3:[function(require,module,exports){
+},{"./Socket.js":1,"./shared/Graph.js":6,"./shared/Gui.js":7}],3:[function(require,module,exports){
 (function (global){
 var matter = require('matter-js');
 var paper = require('paper');
 var resurrect = require('resurrect-js');
 var popupS = require('popups');
-var Graph = require('./shared/Graph.js');
-var Gui = require('./shared/Gui.js');
 var GameState = require('./clientGameState.js');
-var Socket = require('./Socket.js');
 
 paper.install(window);
 
@@ -149,25 +167,56 @@ var canvas = document.getElementById('myCanvas');
 paper.setup(canvas);
 view.viewSize = new Size(1200, 900);
 
-global.GRAPH = new Graph();
-global.GUI = new Gui(GRAPH);
-global.SOCKET = new Socket();
-SOCKET.getName();
-SOCKET.updateServerTimeDiffernce();
-
 global.GAMESTATE = new GameState();
+GAMESTATE.setup();
 
 view.onMouseDown = function(event) {
     var x = Math.round(event.point.x);
     var y = Math.round(event.point.y);
     var pointClicked = new Point(x, y);
     //console.log("click down @ ", pointClicked);
-    GUI.mouseDown(pointClicked);
+    GAMESTATE.GUI.mouseDown(pointClicked);
 
 }
 
+// We want to simulate 1000 ms / 60 FPS = 16.667 ms per frame every time we run update()
+global.TIMESTEP = 1000 / 60;
+var delta = 0;
+
+var fps = 60,
+    framesThisSecond = 0,
+    lastFpsUpdate = 0;
+var numOfUpdatesThisSecond = 0;
+
+//onFrame calls requestAnimationFrame with browser
+//main game loop
 view.onFrame = function(event){
-    GRAPH.update(event.delta);
+    // Track the accumulated time that hasn't been simulated yet
+    delta += (event.delta * 1000); //event.delta is in full seconds, we need ms
+    //console.log("delta: ", delta);
+
+    if (Math.floor(event.time) > lastFpsUpdate) { // update every second
+        fps = Math.round(0.25 * framesThisSecond + (1 - 0.25) * fps); // compute the new FPS
+        GAMESTATE.GUI.fpsText.content = "FPS: " + fps;
+        GAMESTATE.GUI.updatesText.content = "Updates/s: " + numOfUpdatesThisSecond;
+        lastFpsUpdate = Math.floor(event.time);
+        framesThisSecond = 0;
+        numOfUpdatesThisSecond = 0;
+    }
+    framesThisSecond++;
+
+
+    // Simulate the total elapsed time in fixed-size chunks
+    while (delta >= TIMESTEP) {
+        numOfUpdatesThisSecond++;
+        if(numOfUpdatesThisSecond > 200){
+            consol.log("to many updates");
+            break; // way to far behind to catch up
+        }
+        GAMESTATE.update(TIMESTEP);
+        delta -= TIMESTEP;
+    }
+
 }
 
 view.onResize = function(event){
@@ -182,7 +231,7 @@ view.onMouseDrag = function(event) {
     var y = Math.round(event.point.y);
     var pointDragged = new Point(x, y);
     //console.log("Mouse Drag: ", pointDragged);
-    GUI.mouseDrag(pointDragged);
+    GAMESTATE.GUI.mouseDrag(pointDragged);
 }
 
 view.onMouseUp = function(event) {
@@ -190,11 +239,11 @@ view.onMouseUp = function(event) {
     var y = Math.round(event.point.y);
     var pointRealeased = new Point(x, y);
     //console.log("mouse released");
-    GUI.mouseUp(pointRealeased);
+    GAMESTATE.GUI.mouseUp(pointRealeased);
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./Socket.js":1,"./clientGameState.js":2,"./shared/Graph.js":6,"./shared/Gui.js":7,"matter-js":12,"paper":13,"popups":14,"resurrect-js":15}],4:[function(require,module,exports){
+},{"./clientGameState.js":2,"matter-js":12,"paper":13,"popups":14,"resurrect-js":15}],4:[function(require,module,exports){
 module.exports = function (text, x, y, callBack) {
     var viewWidth = view.viewSize._width;
     var viewHeight = view.viewSize._height;
@@ -419,8 +468,11 @@ module.exports = function (graph) {
     //text
     this.nameText = new PointText(new Point(10, 20));
     this.pingText = new PointText(new Point(10, 40));
-    this.timeDiffernceText = new PointText(new Point(10, 60));
-    this.textGroup = new Group(this.nameText, this.timeDiffernceText);
+    this.updatesText = new PointText(new Point(10, 60));
+    this.fpsText = new PointText(new Point(10, 80));
+    this.timeDiffernceText = new PointText(new Point(10, 100));
+    this.textGroup = new Group(this.nameText, this.timeDiffernceText,
+        this.pingText,this.fpsText, this.updatesText);
     this.textGroup.style = {
         justification: 'left',
         fillColor: 'white'
@@ -538,7 +590,7 @@ module.exports = function (nodeStart, link) {
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
     this.size = 6;
-    this.speed = 300; //  pixels/second
+    this.speed = 0.3; //  pixels/update
     this.dir = 1;
     this.path = link.path;
     this.offset = 0;
@@ -550,7 +602,7 @@ module.exports = function (nodeStart, link) {
     }
 
     this.update = function (delta, path) {
-          this.offset += this.dir * delta * this.speed; // speed - 150px/second
+          this.offset += this.dir * delta * this.speed;
           if(this.offset > this.path.length){
               var nextLink = this.nodeEnd.nextLink();
               if(nextLink != null){

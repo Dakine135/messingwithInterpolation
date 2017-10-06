@@ -4,7 +4,7 @@ module.exports = function (nodeStart, link) {
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
     this.size = 6;
-    this.speed = 300; //  pixels/second
+    this.speed = 0.3; //  pixels/update
     this.dir = 1;
     this.path = link.path;
     this.offset = 0;
@@ -16,7 +16,7 @@ module.exports = function (nodeStart, link) {
     }
 
     this.update = function (delta, path) {
-          this.offset += this.dir * delta * this.speed; // speed - 150px/second
+          this.offset += this.dir * delta * this.speed;
           if(this.offset > this.path.length){
               var nextLink = this.nodeEnd.nextLink();
               if(nextLink != null){

@@ -17,8 +17,11 @@ module.exports = function (graph) {
     //text
     this.nameText = new PointText(new Point(10, 20));
     this.pingText = new PointText(new Point(10, 40));
-    this.timeDiffernceText = new PointText(new Point(10, 60));
-    this.textGroup = new Group(this.nameText, this.timeDiffernceText);
+    this.updatesText = new PointText(new Point(10, 60));
+    this.fpsText = new PointText(new Point(10, 80));
+    this.timeDiffernceText = new PointText(new Point(10, 100));
+    this.textGroup = new Group(this.nameText, this.timeDiffernceText,
+        this.pingText,this.fpsText, this.updatesText);
     this.textGroup.style = {
         justification: 'left',
         fillColor: 'white'
