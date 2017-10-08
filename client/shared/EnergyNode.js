@@ -1,4 +1,14 @@
+var GLOBALS = require('../../GLOBALS.js');
+var isNode = require('detect-node');
 module.exports = function (ID, point, size) {
+  var paper;
+  if(isNode) {
+      console.log("server");
+      paper = GLOBALS.paper;
+  } else {
+      console.log("browser");
+      paper = window.paper;
+  }
     this.id = ID;
     this.temp = 0;
     var maxTemp = 1000;
@@ -14,7 +24,7 @@ module.exports = function (ID, point, size) {
     this.linkedNodes = [];
     this.linkedFromNodes = [];
 
-    this.debugText = new PointText(point.x + 10, point.y - 10);
+    this.debugText = new paper.PointText(point.x + 10, point.y - 10);
     this.debugText.fillColor = "white";
     this.debugText.content = this.temp;
 
@@ -38,7 +48,7 @@ module.exports = function (ID, point, size) {
 
     this.moveTo = function(point){
       this.circle.position = point;
-      this.debugText.position = new Point(point.x + 10, point.y - 10);
+      this.debugText.position = new paper.Point(point.x + 10, point.y - 10);
       //move begining of all paths going out
       this.linkedNodes.forEach( function(link){
         link.path.segments[link.path.firstSegment.index].point = point;

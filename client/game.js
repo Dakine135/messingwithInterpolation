@@ -53,7 +53,7 @@ view.onFrame = function(event){
     while (delta >= TIMESTEP) {
         numOfUpdatesThisSecond++;
         if(numOfUpdatesThisSecond > 200){
-            consol.log("to many updates");
+            console.log("to many updates");
             break; // way to far behind to catch up
         }
         GAMESTATE.update(TIMESTEP);

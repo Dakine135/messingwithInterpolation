@@ -1,5 +1,16 @@
 var EnergyNode = require('./EnergyNode.js');
+var GLOBALS = require('../../GLOBALS.js');
+var isNode = require('detect-node');
 module.exports = function (nodeStart, link) {
+  var paper;
+  if(isNode) {
+      console.log("server");
+      paper = GLOBALS.paper;
+  } else {
+      console.log("browser");
+      paper = window.paper;
+  }
+
     //console.log("NodeStart: ", nodeStart.id);
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
