@@ -20,6 +20,19 @@ module.exports = function () {
         this.GRAPH.update(delta);
     }
 
+    /*
+        Process User Events
+    */
+    this.addEnergyNode = function(pointClicked){
+        var timeStamp = new Date().getTime();
+        var adjustedTimeStamp = timeStamp + this.SOCKET.timeDiffernce;
+        var  addEnergyNodeEvent = {
+            type: "addEnergyNode",
+            point: pointClicked,
+            time: adjustedTimeStamp
+        }
+        this.SOCKET.sendUserEvent(addEnergyNodeEvent);
+    }
 
 
 }

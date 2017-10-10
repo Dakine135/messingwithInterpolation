@@ -85,7 +85,8 @@ module.exports = function (graph) {
             }//end moveNodeTool
             else if(this.activeTool == "addNode"){
                 //create new node
-                var newNodeId = this.graph.addEnergyNode(pointClicked);
+                //var newNodeId = this.graph.addEnergyNode(pointClicked);
+                GAMESTATE.addEnergyNode(pointClicked);
             }//end addNodeTool
             else if(this.activeTool == "addLink"){
                 //add Link

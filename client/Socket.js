@@ -6,7 +6,7 @@ module.exports = function () {
     };
     this.timeDiffernce = null;
     this.serverTick = 0;
-    this.ping = 100;
+    this.ping = 30;
 
     var that = this;
 
@@ -41,7 +41,7 @@ module.exports = function () {
         this.socket.emit('clientData',this.client);
     }
 
-    this.pingServer = function(){
+    this.getServerTimeStamp = function(){
         return new Promise(function(resolve){
             that.socket.emit('sendPing');
             that.socket.on('pong', function(serverTimeStamp){
@@ -57,6 +57,7 @@ module.exports = function () {
             this.getServerTimeDiffernce().then((timeDiffernce) => {
                 if(that.timeDiffernce == null){
                     that.timeDiffernce = timeDiffernce;
+                    GAMESTATE.GUI.timeDiffernceText.content = "Time Differnce: Calculating";
                 }
                 that.timeDiffernceArray.push(timeDiffernce);
                 //console.log(timeDiffernce);
@@ -98,12 +99,13 @@ module.exports = function () {
     this.getServerTimeDiffernce = function(){
         var timeSent = new Date().getTime();
         //ping server and recieve server timestamp (time received from server's prespective)
-        var serverTimePromise = this.pingServer();
+        var serverTimePromise = this.getServerTimeStamp();
         return serverTimePromise.then((serverTime) => {
             //take time when recieved on client, this is the round-trip time
             var timeRecieved = new Date().getTime();
             var roundTripTime = timeRecieved - timeSent;
-            //this.ping = 0.25 * roundTripTime + (0.75) * this.ping;
+            this.ping = Math.round(0.75 * roundTripTime + (0.25) * this.ping);
+            GAMESTATE.GUI.pingText.content = "Ping: " + this.ping;
             //half this for the one-way time delay
             var delay = roundTripTime / 2;
             //subtract travel time from servers timestamp
@@ -122,5 +124,9 @@ module.exports = function () {
             });
         });
     }//end getServerTimeDiffernce
+
+    this.sendUserEvent = function(addEnergyNodeEvent){
+        this.socket.emit("userEvent", addEnergyNodeEvent);
+    }
 
 }// end socket class

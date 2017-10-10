@@ -74,6 +74,12 @@ function newConnection(socket){
         socket.emit('pong', serverTime);
     }
 
+    socket.on('userEvent', function(userEvent){
+        console.log("Event: ", userEvent);
+        //handle event in server GAMESTATE
+    });
+
+
     socket.on('disconnecting', clientDisconnected);
     function clientDisconnected(){
         console.log("client disconnected: ", socket.id);

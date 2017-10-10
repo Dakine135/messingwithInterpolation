@@ -22,6 +22,7 @@
   "dependencies": {
     "browserify": "^14.4.0",
     "cookies-js": "^1.2.3",
+    "detect-node": "^2.0.3",
     "express": "^4.15.4",
     "matter-js": "^0.13.0",
     "node-gameloop": "^0.1.4",
