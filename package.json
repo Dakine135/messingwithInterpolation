@@ -6,7 +6,7 @@
   "scripts": {
     "build": "browserify client/game.js -o client/bundle.js",
     "watch": "watchify client/game.js -o client/bundle.js -v",
-    "server": "nodemon server.js",
+    "server": "nodemon server/server.js",
     "start": "npm run server & npm run watch"
   },
   "repository": {

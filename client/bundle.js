@@ -1,9 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var GLOBALS = {};
-GLOBALS.paper = null;
-module.exports = GLOBALS;
-
-},{}],2:[function(require,module,exports){
 var Cookies = require('cookies-js');
 module.exports = function () {
     this.socket = io();
@@ -137,7 +132,7 @@ module.exports = function () {
 
 }// end socket class
 
-},{"cookies-js":12}],3:[function(require,module,exports){
+},{"cookies-js":11}],2:[function(require,module,exports){
 var Graph = require('./shared/Graph.js');
 var Gui = require('./shared/Gui.js');
 var Socket = require('./Socket.js');
@@ -165,7 +160,10 @@ module.exports = function () {
     */
     this.addEnergyNode = function(pointClicked){
         var timeStamp = new Date().getTime();
-        var adjustedTimeStamp = timeStamp + this.SOCKET.timeDiffernce;
+        var adjustedTimeStamp;
+        if(this.SOCKET.timeDiffernce != null){
+            adjustedTimeStamp = timeStamp + this.SOCKET.timeDiffernce;
+        } else adjustedTimeStamp = timeStamp;
         var  addEnergyNodeEvent = {
             type: "addEnergyNode",
             point: pointClicked,
@@ -177,7 +175,7 @@ module.exports = function () {
 
 }
 
-},{"./Socket.js":2,"./shared/Graph.js":7,"./shared/Gui.js":8}],4:[function(require,module,exports){
+},{"./Socket.js":1,"./shared/Graph.js":6,"./shared/Gui.js":7}],3:[function(require,module,exports){
 (function (global){
 var matter = require('matter-js');
 var paper = require('paper');
@@ -267,7 +265,7 @@ view.onMouseUp = function(event) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./clientGameState.js":3,"matter-js":14,"paper":15,"popups":16,"resurrect-js":17}],5:[function(require,module,exports){
+},{"./clientGameState.js":2,"matter-js":13,"paper":14,"popups":15,"resurrect-js":16}],4:[function(require,module,exports){
 module.exports = function (text, x, y, callBack) {
     var viewWidth = view.viewSize._width;
     var viewHeight = view.viewSize._height;
@@ -302,16 +300,16 @@ module.exports = function (text, x, y, callBack) {
     }
 }//end Button Class
 
-},{}],6:[function(require,module,exports){
-var GLOBALS = require('../../GLOBALS.js');
+},{}],5:[function(require,module,exports){
+var GLOBALS = require('../../server/GLOBALS.js');
 var isNode = require('detect-node');
 module.exports = function (ID, point, size) {
   var paper;
   if(isNode) {
-      console.log("server");
+      console.log("server addEnergyNode");
       paper = GLOBALS.paper;
   } else {
-      console.log("browser");
+      console.log("browser addEnergyNode");
       paper = window.paper;
   }
     this.id = ID;
@@ -402,7 +400,7 @@ module.exports = function (ID, point, size) {
 //
 // };
 
-},{"../../GLOBALS.js":1,"detect-node":13}],7:[function(require,module,exports){
+},{"../../server/GLOBALS.js":17,"detect-node":12}],6:[function(require,module,exports){
 var EnergyNode = require('./EnergyNode.js');
 var Packet = require('./Packet.js');
 module.exports = function () {
@@ -482,7 +480,7 @@ module.exports = function () {
     }
 }
 
-},{"./EnergyNode.js":6,"./Packet.js":9}],8:[function(require,module,exports){
+},{"./EnergyNode.js":5,"./Packet.js":8}],7:[function(require,module,exports){
 var Graph = require('./Graph.js');
 var Button = require('./Button.js');
 var Cookies = require('cookies-js');
@@ -618,9 +616,9 @@ module.exports = function (graph) {
 
 }//end Gui Class
 
-},{"./Button.js":5,"./Graph.js":7,"cookies-js":12}],9:[function(require,module,exports){
+},{"./Button.js":4,"./Graph.js":6,"cookies-js":11}],8:[function(require,module,exports){
 var EnergyNode = require('./EnergyNode.js');
-var GLOBALS = require('../../GLOBALS.js');
+var GLOBALS = require('../../server/GLOBALS.js');
 var isNode = require('detect-node');
 module.exports = function (nodeStart, link) {
   var paper;
@@ -678,7 +676,7 @@ module.exports = function (nodeStart, link) {
 
 } //end Packet class
 
-},{"../../GLOBALS.js":1,"./EnergyNode.js":6,"detect-node":13}],10:[function(require,module,exports){
+},{"../../server/GLOBALS.js":17,"./EnergyNode.js":5,"detect-node":12}],9:[function(require,module,exports){
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -4112,9 +4110,9 @@ exports.lineBreakG = lineBreakG;
 Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /*
  * Cookies.js - 1.2.3
  * https://github.com/ScottHamper/Cookies
@@ -4287,7 +4285,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
         global.Cookies = cookiesExport;
     }
 })(typeof window === 'undefined' ? this : window);
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (global){
 module.exports = false;
 
@@ -4297,7 +4295,7 @@ try {
 } catch(e) {}
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (global){
 /**
 * matter-js 0.13.0 by @liabru 2017-07-06
@@ -14577,7 +14575,7 @@ var Vector = _dereq_('../geometry/Vector');
 },{"../body/Composite":2,"../core/Common":14,"../core/Events":16,"../geometry/Bounds":26,"../geometry/Vector":28}]},{},[30])(30)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /*!
  * Paper.js v0.11.4 - The Swiss Army Knife of Vector Graphics Scripting.
  * http://paperjs.org/
@@ -31065,7 +31063,7 @@ if (typeof define === 'function' && define.amd) {
 return paper;
 }.call(this, typeof self === 'object' ? self : null);
 
-},{"./node/extend.js":11,"./node/self.js":11,"acorn":10}],16:[function(require,module,exports){
+},{"./node/extend.js":10,"./node/self.js":10,"acorn":9}],15:[function(require,module,exports){
 ;(function (root, factory) {
 
     if (typeof define === 'function' && define.amd) {
@@ -31946,7 +31944,7 @@ return paper;
     // Export
     return popupS;
 }));
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * # ResurrectJS
  * @version 1.0.3
@@ -32489,4 +32487,11 @@ Resurrect.prototype.resurrect = function(string) {
 
 module.exports = Resurrect;
 
-},{}]},{},[4]);
+},{}],17:[function(require,module,exports){
+var GLOBALS = {};
+GLOBALS.paper = null;
+GLOBALS.socket = null;
+GLOBALS.gameState = null;
+module.exports = GLOBALS;
+
+},{}]},{},[3]);

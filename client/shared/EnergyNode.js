@@ -1,12 +1,12 @@
-var GLOBALS = require('../../GLOBALS.js');
+var GLOBALS = require('../../server/GLOBALS.js');
 var isNode = require('detect-node');
 module.exports = function (ID, point, size) {
   var paper;
   if(isNode) {
-      console.log("server");
+      console.log("server addEnergyNode");
       paper = GLOBALS.paper;
   } else {
-      console.log("browser");
+      console.log("browser addEnergyNode");
       paper = window.paper;
   }
     this.id = ID;

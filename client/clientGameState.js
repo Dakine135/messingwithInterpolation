@@ -25,7 +25,10 @@ module.exports = function () {
     */
     this.addEnergyNode = function(pointClicked){
         var timeStamp = new Date().getTime();
-        var adjustedTimeStamp = timeStamp + this.SOCKET.timeDiffernce;
+        var adjustedTimeStamp;
+        if(this.SOCKET.timeDiffernce != null){
+            adjustedTimeStamp = timeStamp + this.SOCKET.timeDiffernce;
+        } else adjustedTimeStamp = timeStamp;
         var  addEnergyNodeEvent = {
             type: "addEnergyNode",
             point: pointClicked,

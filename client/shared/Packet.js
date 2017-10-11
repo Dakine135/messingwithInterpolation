@@ -1,5 +1,5 @@
 var EnergyNode = require('./EnergyNode.js');
-var GLOBALS = require('../../GLOBALS.js');
+var GLOBALS = require('../../server/GLOBALS.js');
 var isNode = require('detect-node');
 module.exports = function (nodeStart, link) {
   var paper;
