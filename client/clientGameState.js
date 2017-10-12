@@ -20,6 +20,17 @@ module.exports = function () {
         this.GRAPH.update(delta);
     }
 
+    this.handleServerPackage = function(serverGameState){
+        //console.log(serverGameState.graph);
+        serverGameState.graph.energyNodes.forEach( function(node){
+            if(that.GRAPH.energyNodes[node.id] == null){
+                var point = new Point(node.x, node.y);
+                that.GRAPH.addEnergyNode(point);
+            }
+        });
+        //this.GRAPH = serverGameState.graph;
+    }
+
     /*
         Process User Events
     */
@@ -31,7 +42,8 @@ module.exports = function () {
         } else adjustedTimeStamp = timeStamp;
         var  addEnergyNodeEvent = {
             type: "addEnergyNode",
-            point: pointClicked,
+            x: pointClicked.x,
+            y: pointClicked.y,
             time: adjustedTimeStamp
         }
         this.SOCKET.sendUserEvent(addEnergyNodeEvent);

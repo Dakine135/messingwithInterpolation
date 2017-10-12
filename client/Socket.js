@@ -129,4 +129,8 @@ module.exports = function () {
         this.socket.emit("userEvent", addEnergyNodeEvent);
     }
 
+    this.socket.on('serverGameState', function(serverGameState){
+        GAMESTATE.handleServerPackage(serverGameState);
+    });
+
 }// end socket class

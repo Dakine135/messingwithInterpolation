@@ -3,6 +3,10 @@ var GLOBALS = require('./GLOBALS.js');
 module.exports = function (server) {
     this.io = socket(server);
 
+    this.sendState = function(serverGameState){
+        this.io.sockets.emit('serverGameState', serverGameState);
+    }
+
     this.io.sockets.on('connection', newConnection);
     function newConnection(socket){
       //Client first connects, create Client object and snake
@@ -16,7 +20,7 @@ module.exports = function (server) {
         socket.on('sendPing', ping);
         function ping(){
             var serverTime = new Date().getTime();
-            console.log("Server Time: ", serverTime);
+            //console.log("Server Time: ", serverTime);
             socket.emit('pong', serverTime);
         }
 

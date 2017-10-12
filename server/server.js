@@ -2,7 +2,6 @@
 var express = require('express');
 var matter = require('matter-js');
 var paper = require('paper-jsdom');
-var resurrect = require('resurrect-js');
 const gameloop = require('node-gameloop');
 
 var GameState = require('./serverGameState.js');
@@ -42,10 +41,14 @@ const id = gameloop.setGameLoop(function(lastTickDelta) {
       console.log('frame=%s, delta=%s', frameCount, delta);
     }
 
+    if(frameCount % (ticksPerSecond / 4) == 0){
+      //every 4th update
+      GAMESTATE.sendState();
+    }
+
     if(oneTime > 0){
-      var point = new GLOBALS.paper.Point(100,100);
-      GAMESTATE.GRAPH.addEnergyNode(point);
-      oneTime--;
+        //GAMESTATE.sendState();
+        oneTime--;
     }
 
 

@@ -130,6 +130,10 @@ module.exports = function () {
         this.socket.emit("userEvent", addEnergyNodeEvent);
     }
 
+    this.socket.on('serverGameState', function(serverGameState){
+        GAMESTATE.handleServerPackage(serverGameState);
+    });
+
 }// end socket class
 
 },{"cookies-js":11}],2:[function(require,module,exports){
@@ -155,6 +159,17 @@ module.exports = function () {
         this.GRAPH.update(delta);
     }
 
+    this.handleServerPackage = function(serverGameState){
+        //console.log(serverGameState.graph);
+        serverGameState.graph.energyNodes.forEach( function(node){
+            if(that.GRAPH.energyNodes[node.id] == null){
+                var point = new Point(node.x, node.y);
+                that.GRAPH.addEnergyNode(point);
+            }
+        });
+        //this.GRAPH = serverGameState.graph;
+    }
+
     /*
         Process User Events
     */
@@ -166,7 +181,8 @@ module.exports = function () {
         } else adjustedTimeStamp = timeStamp;
         var  addEnergyNodeEvent = {
             type: "addEnergyNode",
-            point: pointClicked,
+            x: pointClicked.x,
+            y: pointClicked.y,
             time: adjustedTimeStamp
         }
         this.SOCKET.sendUserEvent(addEnergyNodeEvent);
@@ -333,6 +349,17 @@ module.exports = function (ID, point, size) {
 
     var that = this;
 
+    this.package = function(){
+        var tempPackage = {
+            id: this.id,
+            x: this.circle.position.x,
+            y: this.circle.position.y,
+            linkedNodes: this.linkedNodes,
+            linkedFromNodes: this.linkedFromNodes
+        }
+        return tempPackage;
+    }
+
     this.addLink = function(node){
         //console.log("link: ", this.id, " to ", node.id);
         var newLinkPath = new paper.Path(this.circle.position, node.circle.position);
@@ -404,7 +431,7 @@ module.exports = function (ID, point, size) {
 var EnergyNode = require('./EnergyNode.js');
 var Packet = require('./Packet.js');
 module.exports = function () {
-    this.currentIdNum = 0;
+    this.currentIdNumEnergyNodes = 0;
     this.energyNodes = {};
     //this.path = new paper.Path();
     // this.path.style = {
@@ -414,16 +441,33 @@ module.exports = function () {
     //this.path.fullySelected = true;
     //this.path.closed = true;
 
-    this.packets = [];
+    this.currentIdNumPackets = 0;
+    this.packets = {};
 
     var that = this;
 
+    this.package = function(){
+        var tempEnergyNodes = [];
+        Object.keys(this.energyNodes).forEach( function(nodeId){
+            tempEnergyNodes.push(that.energyNodes[nodeId].package());
+        });
+        var tempPackets = [];
+        // Object.keys(this.packets).forEach( function(packet){
+        //     packet.update(delta);
+        // });
+        var tempPackage = {
+            energyNodes: tempEnergyNodes,
+            packets: this.packets
+        }
+        return tempPackage;
+    }
+
     this.addEnergyNode = function(point){
         var size = 20;
-        var newNode = new EnergyNode(this.currentIdNum, point, size);
-        this.energyNodes[this.currentIdNum] = newNode;
-        var returnId = this.currentIdNum;
-        this.currentIdNum++;
+        var newNode = new EnergyNode(this.currentIdNumEnergyNodes, point, size);
+        this.energyNodes[this.currentIdNumEnergyNodes] = newNode;
+        var returnId = this.currentIdNumEnergyNodes;
+        this.currentIdNumEnergyNodes++;
 
         //console.log(Object.keys(this.energyNodes));
         // if(Object.keys(this.energyNodes).length == 1){
@@ -446,7 +490,10 @@ module.exports = function () {
         var nodeStart = this.energyNodes[nodeId];
         var link = nodeStart.nextLink();
         if(link != null){
-            this.packets.push( new Packet(nodeStart, link));
+            var id = this.currentIdNumPackets;
+            var tempPacket = new Packet(id, nodeStart, link);
+            this.packets[id] = tempPacket;
+            this.currentIdNumPackets++;
         }
     }
 
@@ -471,7 +518,7 @@ module.exports = function () {
     }
 
     this.update = function(delta){
-        this.packets.forEach( function(packet){
+        Object.keys(this.packets).forEach( function(packet){
             packet.update(delta);
         });
         Object.keys(this.energyNodes).forEach( function(nodeId){
@@ -620,7 +667,7 @@ module.exports = function (graph) {
 var EnergyNode = require('./EnergyNode.js');
 var GLOBALS = require('../../server/GLOBALS.js');
 var isNode = require('detect-node');
-module.exports = function (nodeStart, link) {
+module.exports = function (id, nodeStart, link) {
   var paper;
   if(isNode) {
       console.log("server");
@@ -631,6 +678,7 @@ module.exports = function (nodeStart, link) {
   }
 
     //console.log("NodeStart: ", nodeStart.id);
+    this.id = id;
     this.nodeStart = nodeStart;
     this.nodeEnd = link.node;
     this.size = 6;

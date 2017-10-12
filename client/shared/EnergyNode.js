@@ -30,6 +30,17 @@ module.exports = function (ID, point, size) {
 
     var that = this;
 
+    this.package = function(){
+        var tempPackage = {
+            id: this.id,
+            x: this.circle.position.x,
+            y: this.circle.position.y,
+            linkedNodes: this.linkedNodes,
+            linkedFromNodes: this.linkedFromNodes
+        }
+        return tempPackage;
+    }
+
     this.addLink = function(node){
         //console.log("link: ", this.id, " to ", node.id);
         var newLinkPath = new paper.Path(this.circle.position, node.circle.position);
